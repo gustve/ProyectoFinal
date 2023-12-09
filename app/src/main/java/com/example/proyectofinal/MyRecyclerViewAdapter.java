@@ -1,9 +1,11 @@
 package com.example.proyectofinal;
 
 import android.content.Context;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,6 +40,11 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         Glide.with(context)
                 .load(imageUrl)
                 .into(holder.imageView);
+
+        holder.checkBox.setChecked(isItemSelected(position));
+        holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            setItemSelected(position, isChecked);
+        });
     }
 
     @Override
@@ -53,15 +60,35 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         this.longClickListener = listener;
     }
 
+    private SparseBooleanArray selectedItems = new SparseBooleanArray();
+
+    public boolean isItemSelected(int position) {
+        return selectedItems.get(position, false);
+    }
+
+    public void setItemSelected(int position, boolean isSelected) {
+        if (isSelected) {
+            selectedItems.put(position, true);
+        } else {
+            selectedItems.delete(position);
+        }
+    }
+
+    public boolean anyItemSelected() {
+        return selectedItems.size() > 0;
+    }
     public class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
+        CheckBox checkBox;
 
         ViewHolder(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView);
+            checkBox = itemView.findViewById(R.id.checkBox);
 
             // Establece el OnLongClickListener aquí
             itemView.setOnLongClickListener(view -> {
+                checkBox.setVisibility(View.VISIBLE);
                 if (longClickListener != null) {
                     int position = getAdapterPosition();
                     if (position != RecyclerView.NO_POSITION) {

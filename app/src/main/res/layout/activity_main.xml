@@ -9,11 +9,11 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="46dp"
         android:background="?attr/colorPrimary"
         android:visibility="gone"
-        app:title="Acciones">
-    <!-- Puedes agregar más elementos a la Toolbar si es necesario -->
+        app:title="Acciones"
+        >
 </androidx.appcompat.widget.Toolbar>
     <!-- RecyclerView para mostrar las imágenes -->
     <androidx.recyclerview.widget.RecyclerView
@@ -21,14 +21,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="46dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:padding="4dp"
         android:scrollbars="vertical"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:spanCount="3"
-        tools:listitem="@layout/imageholder" />
+        tools:listitem="@layout/imageholder"
+
+        />
 
     <!-- FloatingActionButton para agregar fotos -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

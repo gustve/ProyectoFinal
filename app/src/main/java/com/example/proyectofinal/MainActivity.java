@@ -8,9 +8,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-import android.widget.Toolbar;
+import androidx.appcompat.widget.Toolbar;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -54,15 +57,8 @@ public class MainActivity extends AppCompatActivity {
         storageReference = storage.getReference();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.action_delete:
-                    // Lógica para eliminar elementos seleccionados
-                    return true;
-                // Añadir más casos según sea necesario
-            }
-            return false;
-        });
+        setSupportActionBar(toolbar);
+
 
         // Botón para tomar la foto
         FloatingActionButton takePhotoButton = findViewById(R.id.fab_add_photo);
@@ -93,6 +89,21 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case 0:
+                // Tu lógica para manejar el clic en "Delete"
+                return true;
+            // Manejar otros ítems si es necesario
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return true;
     }
 
     private void loadImagesFromFirebase() {
