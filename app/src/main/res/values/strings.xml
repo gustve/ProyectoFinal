@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Proyecto Final</string>
+    <string name="Estudiante1">Gustavo Colucci</string>
+    <string name="Estudiante2">Greg</string>
+    <string name="Estudiante3">luis</string>
+    <string name="Estudiante4">Jorge Luis Gonzalez</string>
+    <string name="Estudiante5">Jorge Luis Gonzalez</string>
+    <string name="UTP">Universidad Tecnologica de Panama</string>
+
+</resources>
