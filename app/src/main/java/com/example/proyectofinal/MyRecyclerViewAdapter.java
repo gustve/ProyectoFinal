@@ -70,6 +70,16 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
         }
     }
 
+    public List<String> getFotosSeleccionadas() {
+        List<String> seleccionadas = new ArrayList<>();
+        for (int i = 0; i < getItemCount(); i++) {
+            if (isItemSelected(i)) {
+                seleccionadas.add(mData.get(i));
+            }
+        }
+        return seleccionadas;
+    }
+
     public interface OnItemLongClickListener {
         void onItemLongClicked(int position);
     }

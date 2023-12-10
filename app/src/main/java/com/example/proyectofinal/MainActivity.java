@@ -95,25 +95,31 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, callback);
-
+;
 
     }
 
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case 0:
-                // Tu lógica para manejar el clic en "Delete"
-                return true;
-            // Manejar otros ítems si es necesario
-        }
-        return super.onOptionsItemSelected(item);
-    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_delete) {
+            eliminarFotosSeleccionadas();
+            isSelectionMode = false;
+            adapter.clearSelections();
+            adapter.setSelectionMode(false);
+            adapter.notifyDataSetChanged();
+            toolbar.setVisibility(View.GONE);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void loadImagesFromFirebase() {
@@ -183,6 +189,39 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Error al subir la imagen", Toast.LENGTH_SHORT).show();
                     });
         }
+    }
+
+    private void eliminarFotosSeleccionadas() {
+        List<String> fotosSeleccionadas = adapter.getFotosSeleccionadas();
+
+        for (String fotoUrl : fotosSeleccionadas) {
+            // Eliminar la imagen de Firebase Storage
+            StorageReference fotoRef = FirebaseStorage.getInstance().getReferenceFromUrl(fotoUrl);
+            fotoRef.delete().addOnSuccessListener(aVoid -> {
+                // Imagen eliminada de Firebase Storage
+                // Ahora elimina la referencia de la imagen de Firebase Realtime Database
+                DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("images");
+                dbRef.orderByValue().equalTo(fotoUrl).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                            snapshot.getRef().removeValue();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("Firebase", "Error al eliminar la imagen", databaseError.toException());
+                    }
+                });
+            }).addOnFailureListener(e -> {
+                // Manejar el error
+                Log.e("Firebase", "Error al eliminar la imagen", e);
+            });
+        }
+
+        // Recargar y actualizar el RecyclerView
+        loadImagesFromFirebase();
     }
 
 }
