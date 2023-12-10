@@ -98,6 +98,13 @@ public class MainActivity extends AppCompatActivity {
         };
         getOnBackPressedDispatcher().addCallback(this, callback);
 
+        adapter.setOnItemClickListener((imageUrl, imageName) -> {
+            Intent intent = new Intent(MainActivity.this, ImageEXP.class);
+            intent.putExtra("imagePath", imageUrl);
+            intent.putExtra("imageName", imageName);
+            startActivity(intent);
+        });
+
     }
 
 
@@ -242,11 +249,5 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             });
-    public void openImageDetailFragment(String imagePath, String imageName) {
-        ImageDetailFragment fragment = new ImageDetailFragment(imagePath, imageName);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment) // Asegúrate de tener un contenedor de fragmentos en tu layout
-                .addToBackStack(null)
-                .commit();
-    }
+
 }

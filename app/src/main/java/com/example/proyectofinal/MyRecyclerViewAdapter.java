@@ -24,6 +24,15 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     private final Context context;
     private OnItemLongClickListener longClickListener;
 
+    private OnItemClickListener clickListener;
+
+    public interface OnItemClickListener {
+        void onItemClick(String imageUrl, String imageName);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.clickListener = listener;
+    }
     MyRecyclerViewAdapter(Context context, List<String> data) {
         this.mInflater = LayoutInflater.from(context);
         this.context = context;
@@ -115,6 +124,17 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
                     }
                 }
                 return true;
+            });
+
+            itemView.setOnClickListener(view -> {
+                if (clickListener != null && !selectionMode) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+                        String imageUrl = mData.get(position);
+                        String imageName = "Imagen " + position; // Or fetch the real name if available
+                        clickListener.onItemClick(imageUrl, imageName);
+                    }
+                }
             });
 
 
