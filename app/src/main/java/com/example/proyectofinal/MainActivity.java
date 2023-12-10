@@ -1,5 +1,6 @@
 package com.example.proyectofinal;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -13,6 +14,10 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -27,7 +32,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import androidx.activity.OnBackPressedDispatcher;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -39,11 +43,9 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isSelectionMode = false;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private FirebaseStorage storage;
     private StorageReference storageReference;
     private Uri photoUri;
 
-    private RecyclerView recyclerView;
     private List<String> imageUrls;
     private MyRecyclerViewAdapter adapter;
     private Toolbar toolbar;
@@ -54,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Inicializar Firebase Storage
-        storage = FirebaseStorage.getInstance();
+        FirebaseStorage storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
         toolbar = findViewById(R.id.toolbar);
@@ -65,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton takePhotoButton = findViewById(R.id.fab_add_photo);
         takePhotoButton.setOnClickListener(view -> dispatchTakePictureIntent());
 
-        recyclerView = findViewById(R.id.recyclerView);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
 
         imageUrls = new ArrayList<>();
@@ -95,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         getOnBackPressedDispatcher().addCallback(this, callback);
-;
 
     }
 
@@ -147,7 +148,8 @@ public class MainActivity extends AppCompatActivity {
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            someActivityResultLauncher.launch(intent);
         }
     }
 
@@ -156,8 +158,10 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
+            assert extras != null;
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             // Convertir bitmap a Uri (necesario para Firebase)
+            assert imageBitmap != null;
             photoUri = getImageUri(getApplicationContext(), imageBitmap);
             uploadImageToFirebase();
         }
@@ -180,14 +184,13 @@ public class MainActivity extends AppCompatActivity {
                             // Guarda la URL de la imagen en Firebase Realtime Database
                             DatabaseReference databaseRef = FirebaseDatabase.getInstance().getReference("images");
                             String imageId = databaseRef.push().getKey();
+                            assert imageId != null;
                             databaseRef.child(imageId).setValue(imageUrl);
 
                             Toast.makeText(MainActivity.this, "Imagen subida con éxito", Toast.LENGTH_SHORT).show();
                         });
                     })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(MainActivity.this, "Error al subir la imagen", Toast.LENGTH_SHORT).show();
-                    });
+                    .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error al subir la imagen", Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -224,4 +227,26 @@ public class MainActivity extends AppCompatActivity {
         loadImagesFromFirebase();
     }
 
+    private ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    Bundle extras = data.getExtras();
+                    assert extras != null;
+                    Bitmap imageBitmap = (Bitmap) extras.get("data");
+                    // Convertir bitmap a Uri (necesario para Firebase)
+                    assert imageBitmap != null;
+                    photoUri = getImageUri(getApplicationContext(), imageBitmap);
+                    uploadImageToFirebase();
+
+                }
+            });
+    public void openImageDetailFragment(String imagePath, String imageName) {
+        ImageDetailFragment fragment = new ImageDetailFragment(imagePath, imageName);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment) // Asegúrate de tener un contenedor de fragmentos en tu layout
+                .addToBackStack(null)
+                .commit();
+    }
 }
