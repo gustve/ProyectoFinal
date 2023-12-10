@@ -13,10 +13,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
-
+    private List<ViewHolder> viewHolders = new ArrayList<>();
     private List<String> mData;
     private LayoutInflater mInflater;
     private Context context;
@@ -36,12 +37,15 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        if (!viewHolders.contains(holder)) {
+            viewHolders.add(holder);
+        }
         String imageUrl = mData.get(position);
-        Glide.with(context)
-                .load(imageUrl)
-                .into(holder.imageView);
+        Glide.with(context).load(imageUrl).into(holder.imageView);
 
+        holder.checkBox.setOnCheckedChangeListener(null);
         holder.checkBox.setChecked(isItemSelected(position));
+        holder.checkBox.setVisibility(selectionMode ? View.VISIBLE : View.GONE);
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             setItemSelected(position, isChecked);
         });
@@ -50,6 +54,20 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     @Override
     public int getItemCount() {
         return mData.size();
+    }
+
+    private boolean selectionMode = false;
+
+    public void setSelectionMode(boolean selectionMode) {
+        this.selectionMode = selectionMode;
+    }
+
+    public void clearSelections() {
+        selectedItems.clear();
+        for (ViewHolder holder : viewHolders) {
+            holder.checkBox.setChecked(false);
+            holder.checkBox.setVisibility(View.GONE);
+        }
     }
 
     public interface OnItemLongClickListener {
@@ -88,8 +106,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
             // Establece el OnLongClickListener aquí
             itemView.setOnLongClickListener(view -> {
-                checkBox.setVisibility(View.VISIBLE);
-                if (longClickListener != null) {
+                if (longClickListener != null && !selectionMode) {
                     int position = getAdapterPosition();
                     if (position != RecyclerView.NO_POSITION) {
                         longClickListener.onItemLongClicked(position);

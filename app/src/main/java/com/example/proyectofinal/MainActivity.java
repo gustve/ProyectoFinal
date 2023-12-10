@@ -5,18 +5,17 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-import androidx.appcompat.widget.Toolbar;
 
-
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,7 +27,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-
+import androidx.activity.OnBackPressedDispatcher;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
+    private boolean isSelectionMode = false;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private FirebaseStorage storage;
     private StorageReference storageReference;
@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<String> imageUrls;
     private MyRecyclerViewAdapter adapter;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
@@ -72,24 +73,33 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         loadImagesFromFirebase();
-        adapter.setOnItemLongClickListener(new MyRecyclerViewAdapter.OnItemLongClickListener() {
+        adapter.setOnItemLongClickListener(position -> {
+            isSelectionMode = true;
+            adapter.setSelectionMode(true);
+            adapter.notifyDataSetChanged(); // Notifica al adaptador para actualizar la vista
+            toolbar.setVisibility(View.VISIBLE);
+        });
+        OnBackPressedCallback callback = new OnBackPressedCallback(true /* enabled by default */) {
             @Override
-            public void onItemLongClicked(int position) {
-                boolean newState = !adapter.isItemSelected(position);
-                adapter.setItemSelected(position, newState);
-                adapter.notifyItemChanged(position);
-
-                if (adapter.anyItemSelected()) {
-                    toolbar.setVisibility(View.VISIBLE);
-                } else {
+            public void handleOnBackPressed() {
+                if (isSelectionMode) {
+                    isSelectionMode = false;
+                    adapter.clearSelections();
+                    adapter.setSelectionMode(false);
+                    adapter.notifyDataSetChanged();
                     toolbar.setVisibility(View.GONE);
+                } else {
+                    setEnabled(false); // Desactiva este callback
+                    getOnBackPressedDispatcher().onBackPressed(); // Llama al comportamiento por defecto
                 }
             }
-        });
-
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
 
 
     }
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
